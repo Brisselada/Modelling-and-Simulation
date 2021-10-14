@@ -1,35 +1,20 @@
-import os, sys
-import traci
-import traci.constants as tc
 from matplotlib.pyplot import figure, show
 import numpy as np
+from simulation import simulation
 
-# Settings
-timestep = 1
+if __name__ == '__main__':
+    timestep = 10
+    endstep = 10000
 
-sumoCmd = ["sumo ", "-c", "../generate_network/grid.sumocfg"]
+    s = simulation()
+    mean_speeds, mean_times = s.start_sim(timestep,endstep)
 
-traci.start(sumoCmd)
+    print(sum(mean_times)/len(mean_times))
 
-mean_speeds = []
+    fig=figure()
+    frame = fig.add_subplot(1,2,1)
+    frame.scatter(np.arange(1,len(mean_speeds)*timestep,timestep),mean_speeds)
 
-step = 0
-while step < 10000:
-    all_vehicles = traci.vehicle.getIDList()
-    speed_step = []
-    for ID in all_vehicles:
-        speed_step.append(traci.vehicle.getSpeed(ID))
-
-    if len(speed_step)>0:
-        mean_speeds.append(sum(speed_step)/len(speed_step))
-    traci.simulationStep()
-    step += timestep
-
-traci.close()
-
-
-
-fig=figure()
-frame = fig.add_subplot(1,1,1)
-frame.scatter(np.arange(1,10000,timestep),mean_speeds)
-show()
+    frame = fig.add_subplot(1,2,2)
+    frame.scatter(np.arange(1,len(mean_times)*timestep,timestep),mean_times)
+    show()
