@@ -45,6 +45,8 @@ class simulation:
         traci.start(self.sumoCmd)
         #self.prep_data()
 
+        self.all_tl = traci.trafficlight.getIDList()
+
         step = 0
         while step < endstep:
             all_vehicles = traci.vehicle.getIDList()
