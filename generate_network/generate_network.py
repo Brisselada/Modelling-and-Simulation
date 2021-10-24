@@ -19,7 +19,7 @@ def makegrid(number: int = 3,length: int = 200 , traffic_light: bool = True, flo
 
 
     if traffic_light:
-        os.system(f"netgenerate -g --grid.number={number} --grid.length={length} --default-junction-type traffic_light --tls.cycle.time {total_cycle_time} -L 1 --no-turnarounds true --turn-lanes 2 --output-file=grid.net.xml")
+        os.system(f"netgenerate -g --grid.number={number} --grid.length={length} --default-junction-type traffic_light --tls.cycle.time {total_cycle_time} -L 1 --no-turnarounds true --turn-lanes 2 --no-internal-links --turn-lanes.length 99 --output-file=grid.net.xml")
     else:
         os.system(f"netgenerate -g --grid.number={number} --grid.length={length} --output-file=grid.net.xml")
     os.system("python \"" + tools + f"\\randomTrips.py\" -n grid.net.xml -o flows.xml --end 1 --period 1 --flows {flows}")
