@@ -9,8 +9,6 @@ if __name__ == '__main__':
     s = simulation()
     mean_speeds, mean_times = s.start_sim(timestep,endstep)
 
-    print(sum(mean_times)/len(mean_times))
-
     fig=figure()
     frame = fig.add_subplot(1,2,1)
     frame.scatter(np.arange(1,len(mean_speeds)*timestep,timestep),mean_speeds)
