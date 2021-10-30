@@ -3,41 +3,90 @@ import traci
 import traci.constants as tc
 from collections.abc import Callable
 import numpy as np
-from dataclasses import dataclass
-from typing import Union
+import string
+
+
+class Junction:
+    def __init__(self, ID: str, tl_combinations) -> None:
+        self.ID = ID
+        self.connected_lanes = []
+        self.tl_combinations = tl_combinations
+        lanes = traci.trafficlight.getControlledLanes(ID)
+        for l in lanes:
+            self.connected_lanes.append(Lane(l))
+
+
+class Lane:
+    def __init__(self, ID: str) -> None:
+        self.previous_junction = ID[2:4]
+        self.previous_lane = ID[0:4] + "_0"
+        self.previous_tl_connected_lanes = []
+        self.ID = ID
+        for link in traci.lane.getLinks(self.previous_lane):
+            link_ID = link[0]
+            self.previous_tl_connected_lanes.append(link_ID)
+
+
+class Combination:
+    def __init__(self, ryg_state: str,corresponding_lanes: list) -> None:
+        self.ryg_state = ryg_state
+        self.corresponding_lanes = corresponding_lanes
 
 
 class simulation:
-    def __init__(self, grid_path: str = "../generate_network/grid.sumocfg") -> None:
+    def __init__(self, n: int, grid_path: str = "../generate_network/grid.sumocfg") -> None:
         self.sumoCmd = ["sumo", "-c", grid_path]
+        self.gridsize = n
+
+
 
     def prep_data(self) -> None:
-        # Getting all traffic light lane connections
-        self.all_tl = traci.trafficlight.getIDList()
 
-        # Final data structures contain lanes reading to tl and from tl
-        self.tl_to_lanes = {}
-        self.tl_from_lanes = {}
+        traffic_lights = traci.trafficlight.getIDList()
 
-        for ID in self.all_tl:
-            self.tl_to_lanes[ID] = []
-            self.tl_from_lanes[ID] = []
+        # Excluding the corners by manually adding their ID's
+        letters = string.ascii_uppercase
+        excluded = [letters[0] + "0", letters[0] + str(self.gridsize-1), letters[self.gridsize-1] + "0",
+                    letters[self.gridsize-1] + str(self.gridsize-1)]
 
-        # List of all the lanes
-        lanes = traci.lane.getIDList()
+        self.junctions = []
+        for ID in traffic_lights:
+            if ID not in excluded:
+                # For different types of junctions (middle, left, right, top bottom) there are different combinations possible
+                combinations = []
+                # Left
+                if ID[0] == "A":
+                    for rgy, lane_index in zip(["GrrrGG", "GGGrrr", "rrGGGr"],[[0, 4, 5], [0, 1, 2], [2, 3, 4]]):
+                        lanes = np.array(traci.trafficlight.getControlledLanes(ID))
+                        lane_combinations = lanes[lane_index]
+                        combinations.append(Combination(rgy, lane_combinations))
+                # Right
+                elif ID[0] == str(letters[self.gridsize-1]):
+                    for rgy, lane_index in zip(["GGGrrr", "rrGGGr", "GrrrGG"], [[0, 1, 2], [2, 3, 4], [0, 4, 5]]):
+                        lanes = np.array(traci.trafficlight.getControlledLanes(ID))
+                        lane_combinations = lanes[lane_index]
+                        combinations.append(Combination(rgy, lane_combinations))
+                # Bottom
+                elif ID[1] == "0":
+                    for rgy, lane_index in zip(["rrGGGr", "GrrrGG", "GGGrrr"], [[2, 3, 4], [0, 4, 5], [0, 1, 2]]):
+                        lanes = np.array(traci.trafficlight.getControlledLanes(ID))
+                        lane_combinations = lanes[lane_index]
+                        combinations.append(Combination(rgy, lane_combinations))
+                # Top
+                elif ID[1] == str(self.gridsize-1):
+                    for rgy, lane_index in zip(["GrrrGG", "GGGrrr", "rrGGGr"], [[0, 4, 5], [0, 1, 2], [2, 3, 4]]):
+                        lanes = np.array(traci.trafficlight.getControlledLanes(ID))
+                        lane_combinations = lanes[lane_index]
+                        combinations.append(Combination(rgy, lane_combinations))
+                # Middle
+                else:
+                    for rgy, lane_index in zip(["GrrrrGGrrrrGG", "GGrrrrGGrrrrr", "rrGGrrrrGGrrr","rrrGGrrrrGGrr"], [[0, 5, 6, 11], [0, 1, 6, 7], [2, 3, 8, 9], [3, 4, 9, 10]]):
+                        lanes = np.array(traci.trafficlight.getControlledLanes(ID))
+                        lane_combinations = lanes[lane_index]
+                        combinations.append(Combination(rgy, lane_combinations))
 
-        for l in lanes:
-            # this might be due to a bug in traci, but it it gets all lanes twice, the first time in a weird format
-            # starting with ":", so we skip those
-            if l[0]==":":
-                continue
-            lane_from_edge = l[0:2]
-            lane_to_edge = l[2:4]
+                self.junctions.append(Junction(ID, combinations))
 
-            if lane_from_edge in self.tl_to_lanes:
-                self.tl_from_lanes[lane_from_edge].append(l)
-            if lane_to_edge in self.tl_to_lanes:
-                self.tl_to_lanes[lane_to_edge].append(l)
     def start_sim(self,timestep: int = 1,endstep : int = 10000):
         mean_speeds = []
         mean_times = []
@@ -45,7 +94,6 @@ class simulation:
         traci.start(self.sumoCmd)
         self.prep_data()
 
-        self.all_tl = traci.trafficlight.getIDList()
 
         step = 0
         while step < endstep:

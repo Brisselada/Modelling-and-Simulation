@@ -79,8 +79,8 @@ def make_custom_tl(number: int) -> None:
         right = ET.SubElement(additional, "tlLogic", id=letters[number-1] + str(i), type="static", programID="1", offset="0")
         ET.SubElement(right, "phase", duration="20", state="GGGrrr")
         ET.SubElement(right, "phase", duration="3", state="yyyrrr")
-        ET.SubElement(right, "phase", duration="20", state="rrGGrr")
-        ET.SubElement(right, "phase", duration="3", state="rryyrr")
+        ET.SubElement(right, "phase", duration="20", state="rrGGGr")
+        ET.SubElement(right, "phase", duration="3", state="rryyyr")
         ET.SubElement(right, "phase", duration="20", state="GrrrGG")
         ET.SubElement(right, "phase", duration="3", state="yrrryy")
     # Middle sides - Top and bottom
@@ -97,8 +97,8 @@ def make_custom_tl(number: int) -> None:
                               offset="0")
         ET.SubElement(bottom, "phase", duration="20", state="rrGGGr")
         ET.SubElement(bottom, "phase", duration="3", state="rryyyr")
-        ET.SubElement(bottom, "phase", duration="20", state="rrrrGG")
-        ET.SubElement(bottom, "phase", duration="3", state="rrrryy")
+        ET.SubElement(bottom, "phase", duration="20", state="GrrrGG")
+        ET.SubElement(bottom, "phase", duration="3", state="yrrryy")
         ET.SubElement(bottom, "phase", duration="20", state="GGGrrr")
         ET.SubElement(bottom, "phase", duration="3", state="yyyrrr")
     for i in range(1, number-1):
@@ -118,4 +118,4 @@ def make_custom_tl(number: int) -> None:
 
 
 if __name__ == '__main__':
-    makegrid()
+    makegrid(number = 5)

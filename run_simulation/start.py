@@ -6,7 +6,7 @@ if __name__ == '__main__':
     timestep = 10
     endstep = 10000
 
-    s = simulation()
+    s = simulation(5)
     mean_speeds, mean_times = s.start_sim(timestep,endstep)
 
     fig=figure()
