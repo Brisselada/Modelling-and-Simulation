@@ -64,31 +64,41 @@ class simulation:
                 if ID[0] == "A":
                     for rgy, lane_index in zip(["GrrrGG", "GGGrrr", "rrGGGr"],[[0, 4, 5], [0, 1, 2], [2, 3, 4]]):
                         lanes = np.array(traci.trafficlight.getControlledLanes(ID))
-                        lane_combinations = lanes[lane_index]
+                        lane_combinations = []
+                        for i in lane_index:
+                            lane_combinations.append(Lane(lanes[i]))
                         combinations.append(Combination(rgy, lane_combinations))
                 # Right
                 elif ID[0] == str(letters[self.gridsize-1]):
                     for rgy, lane_index in zip(["GGGrrr", "rrGGGr", "GrrrGG"], [[0, 1, 2], [2, 3, 4], [0, 4, 5]]):
                         lanes = np.array(traci.trafficlight.getControlledLanes(ID))
-                        lane_combinations = lanes[lane_index]
+                        lane_combinations = []
+                        for i in lane_index:
+                            lane_combinations.append(Lane(lanes[i]))
                         combinations.append(Combination(rgy, lane_combinations))
                 # Bottom
                 elif ID[1] == "0":
                     for rgy, lane_index in zip(["rrGGGr", "GrrrGG", "GGGrrr"], [[2, 3, 4], [0, 4, 5], [0, 1, 2]]):
                         lanes = np.array(traci.trafficlight.getControlledLanes(ID))
-                        lane_combinations = lanes[lane_index]
+                        lane_combinations = []
+                        for i in lane_index:
+                            lane_combinations.append(Lane(lanes[i]))
                         combinations.append(Combination(rgy, lane_combinations))
                 # Top
                 elif ID[1] == str(self.gridsize-1):
                     for rgy, lane_index in zip(["GrrrGG", "GGGrrr", "rrGGGr"], [[0, 4, 5], [0, 1, 2], [2, 3, 4]]):
                         lanes = np.array(traci.trafficlight.getControlledLanes(ID))
-                        lane_combinations = lanes[lane_index]
+                        lane_combinations = []
+                        for i in lane_index:
+                            lane_combinations.append(Lane(lanes[i]))
                         combinations.append(Combination(rgy, lane_combinations))
                 # Middle
                 else:
                     for rgy, lane_index in zip(["GrrrrGGrrrrGG", "GGrrrrGGrrrrr", "rrGGrrrrGGrrr","rrrGGrrrrGGrr"], [[0, 5, 6, 11], [0, 1, 6, 7], [2, 3, 8, 9], [3, 4, 9, 10]]):
                         lanes = np.array(traci.trafficlight.getControlledLanes(ID))
-                        lane_combinations = lanes[lane_index]
+                        lane_combinations = []
+                        for i in lane_index:
+                            lane_combinations.append(Lane(lanes[i]))
                         combinations.append(Combination(rgy, lane_combinations))
 
                 self.junctions.append(Junction(ID, combinations))
@@ -113,8 +123,9 @@ class simulation:
                 mean_speeds.append(sum(speed_step)/len(speed_step))
             if len(time_step) > 0:
                 mean_times.append(sum(time_step)/len(time_step))
-            # self.eval_tls_queuesize()
-            # self.eval_tls_global()
+            if step>1 and step%10==0:
+                self.eval_tls_queuesize()
+                # self.eval_tls_global()
             traci.simulationStep()
             step += timestep
 
@@ -132,7 +143,8 @@ class simulation:
                     tl_combination.score += self.getNumVehicles(lane.ID)
             newState = self.getNewRYGState(junc.tl_combinations)
             # Nog beslissen wat beste manier van phase setten is, enkele manieren beschikbaar
-            traci.trafficlight.setRedYellowGreenState(junc, newState)
+            if newState:
+                traci.trafficlight.setRedYellowGreenState(junc.ID, newState)
 
 
     # Evaluates all traffic lights in the system (alleen op 4-way intersections?) and sets the new corresponding state
@@ -158,14 +170,14 @@ class simulation:
                 for lane in tl_combination.corresponding_lanes:
                     connected_score = 0
                     for connected_lane in lane.previous_tl_connected_lanes:
-                        connected_score += self.lane_scores[connected_lane.ID]
+                        connected_score += self.lane_scores[connected_lane]
                     tl_combination.score += self.lane_scores[lane.ID] + (connected_score * self.connectedFactor)
             newState = self.getNewRYGState(junc.tl_combinations)
             # Nog beslissen wat beste manier van phase setten is, enkele manieren beschikbaar
-            traci.trafficlight.setRedYellowGreenState(junc, newState)
+            traci.trafficlight.setRedYellowGreenState(junc.ID, newState)
 
     # Returns number of vehicles on the given lane, within X distance of the junction
-    def getNumVehicles(self, lane):
+    def getNumVehicles(self, lane: str):
         total = 0
         for vehicle in traci.lane.getLastStepVehicleIDs(lane):
             if traci.vehicle.getLanePosition(vehicle) < 90: # Moet wss specifieker
@@ -175,10 +187,10 @@ class simulation:
     # Returns the traffic light combination with the highest score
     def getNewRYGState(self, tl_combinations):
         highScore = 0
-        new_ryg_state = [] # The new traffic light combination
+        new_ryg_state = None # The new traffic light combination
         for combination in tl_combinations:
             if combination.score > highScore:
-                combination.score = highScore
+                highScore = combination.score
                 new_ryg_state = combination.ryg_state
         return new_ryg_state
 
