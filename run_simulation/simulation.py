@@ -1,6 +1,5 @@
 import os, sys
 from collections import defaultdict
-
 import traci
 import traci.constants as tc
 from collections.abc import Callable
@@ -13,6 +12,9 @@ class Junction:
         self.ID = ID
         self.connected_lanes = []
         self.tl_combinations = tl_combinations
+        self.recently_change = False
+        self.countdown_next_change = 0
+        self.next_state = None
         lanes = traci.trafficlight.getControlledLanes(ID)
         for l in lanes:
             self.connected_lanes.append(Lane(l))
@@ -40,7 +42,6 @@ class simulation:
     def __init__(self, n: int, grid_path: str = "../generate_network/grid.sumocfg") -> None:
         self.sumoCmd = ["sumo", "-c", grid_path]
         self.gridsize = n
-
 
 
     def prep_data(self) -> None:
@@ -123,9 +124,8 @@ class simulation:
                 mean_speeds.append(sum(speed_step)/len(speed_step))
             if len(time_step) > 0:
                 mean_times.append(sum(time_step)/len(time_step))
-            if step>1 and step%10==0:
-                self.eval_tls_queuesize()
-                # self.eval_tls_global()
+            self.eval_tls_queuesize(step,check_interval=10)
+            # self.eval_tls_global(step,check_interval=10)
             traci.simulationStep()
             step += timestep
 
@@ -135,22 +135,33 @@ class simulation:
 
     # Evaluates all traffic lights in the system (alleen op 4-way intersections?) and sets the new corresponding state
     # Uses the queue size based strategy
-    def eval_tls_queuesize(self):
-        for junc in self.junctions:
-            for tl_combination in junc.tl_combinations:
-                tl_combination.score = 0
-                for lane in tl_combination.corresponding_lanes:
-                    tl_combination.score += self.getNumVehicles(lane.ID)
-            newState = self.getNewRYGState(junc.tl_combinations)
-            # Nog beslissen wat beste manier van phase setten is, enkele manieren beschikbaar
-            if newState:
-                traci.trafficlight.setRedYellowGreenState(junc.ID, newState)
+    def eval_tls_queuesize(self,step: int, check_interval: int):
+        # If the step is a multiple of the check interval, do the calculations
+        if step % check_interval == 0:
+            for junc in self.junctions:
+                for tl_combination in junc.tl_combinations:
+                    tl_combination.score = 0
+                    for lane in tl_combination.corresponding_lanes:
+                        tl_combination.score += self.getNumVehicles(lane.ID)
+                newState = self.getNewRYGState(junc.tl_combinations)
+                # Nog beslissen wat beste manier van phase setten is, enkele manieren beschikbaar
+                junc.next_state = newState
+
+                # Getting the current state and making all red lights yellow
+                current_state = traci.trafficlight.getRedYellowGreenState(junc.ID)
+                if current_state != newState:
+                    traci.trafficlight.setRedYellowGreenState(junc.ID, current_state.replace("G", "y"))
+        elif (step-3) % check_interval == 0:
+            for junc in self.junctions:
+                if junc.next_state:
+                    traci.trafficlight.setRedYellowGreenState(junc.ID, junc.next_state)
+
 
 
     # Evaluates all traffic lights in the system (alleen op 4-way intersections?) and sets the new corresponding state
     # Uses the smart/global strategy
     # Overwegend hetzelfde als queue size based strategy, maar dan met extra phase en de extra connectedScore
-    def eval_tls_global(self):
+    def eval_tls_global(self, step: int, check_interval: int):
         # # Phase 1: First calculate all connected scores for each TL
         # for TL in traci.trafficlight.getIDList(): # Alleen de stoplichten van middelste junctions beschouwen?
         #     for connectedEdge in TL.connectedEdges: # only 1 in our case, since each lane has a distinct direction
@@ -159,22 +170,33 @@ class simulation:
         #             CE_TL.connectedScore += (1 / len(connectedEdge.trafficLights)) # usually 1/3
 
         # Phase 1: Calculate own score for each TL
-        for junc in self.junctions:
-            for lane in junc.connected_lanes:  # Each TL should control 1 lane
-                self.lane_scores[lane.ID] = self.getNumVehicles(lane.ID)
+        # If the step is a multiple of the check interval, do the calculations
+        if step % check_interval == 0:
+            for junc in self.junctions:
+                for lane in junc.connected_lanes:  # Each TL should control 1 lane
+                    self.lane_scores[lane.ID] = self.getNumVehicles(lane.ID)
 
-        # Phase 2: Add connected score and own score, determine new TL combination
-        for junc in self.junctions:
-            for tl_combination in junc.tl_combinations:
-                tl_combination.score = 0
-                for lane in tl_combination.corresponding_lanes:
-                    connected_score = 0
-                    for connected_lane in lane.previous_tl_connected_lanes:
-                        connected_score += self.lane_scores[connected_lane]
-                    tl_combination.score += self.lane_scores[lane.ID] + (connected_score * self.connectedFactor)
-            newState = self.getNewRYGState(junc.tl_combinations)
-            # Nog beslissen wat beste manier van phase setten is, enkele manieren beschikbaar
-            traci.trafficlight.setRedYellowGreenState(junc.ID, newState)
+            # Phase 2: Add connected score and own score, determine new TL combination
+            for junc in self.junctions:
+                for tl_combination in junc.tl_combinations:
+                    tl_combination.score = 0
+                    for lane in tl_combination.corresponding_lanes:
+                        connected_score = 0
+                        for connected_lane in lane.previous_tl_connected_lanes:
+                            connected_score += self.lane_scores[connected_lane]
+                        tl_combination.score += self.lane_scores[lane.ID] + (connected_score * self.connectedFactor)
+                newState = self.getNewRYGState(junc.tl_combinations)
+                junc.next_state = newState
+
+                # Getting the current state and making all red lights yellow
+                current_state = traci.trafficlight.getRedYellowGreenState(junc.ID)
+                if current_state != newState:
+                    traci.trafficlight.setRedYellowGreenState(junc.ID, current_state.replace("G", "y"))
+        # If the yellow light has been on for 3 second we switch to the new state
+        elif (step-3) % check_interval == 0:
+            for junc in self.junctions:
+                if junc.next_state:
+                    traci.trafficlight.setRedYellowGreenState(junc.ID, junc.next_state)
 
     # Returns number of vehicles on the given lane, within X distance of the junction
     def getNumVehicles(self, lane: str):
