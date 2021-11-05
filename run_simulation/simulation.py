@@ -105,7 +105,7 @@ class simulation:
 
                 self.junctions.append(Junction(ID, combinations))
 
-    def start_sim(self,timestep: int = 1,endstep : int = 10000, simulation: str = None):
+    def start_sim(self,tl_time: int = 10, timestep: int = 1,endstep : int = 10000, strategy: str = None):
         mean_speeds = []
         mean_times = []
 
@@ -127,12 +127,12 @@ class simulation:
                     mean_speeds.append(sum(speed_step)/len(speed_step))
                 if len(time_step) > 0:
                     mean_times.append(sum(time_step)/len(time_step))
-            if simulation == "queue_size":
-                self.eval_tls_queuesize(step,check_interval=10)
-            elif simulation == "global":
-                self.eval_tls_global(step, check_interval=10)
-            elif simulation == "fcfs":
-                self.eval_tls_fcfs(step, check_interval=10)
+            if strategy == "queue_size":
+                self.eval_tls_queuesize(step,check_interval=tl_time)
+            elif strategy == "global":
+                self.eval_tls_global(step, check_interval=tl_time)
+            elif strategy == "fcfs":
+                self.eval_tls_fcfs(step, check_interval=tl_time)
             traci.simulationStep()
             step += timestep
 
