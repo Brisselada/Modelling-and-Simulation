@@ -15,6 +15,7 @@ class Junction:
         self.recently_change = False
         self.countdown_next_change = 0
         self.next_state = None
+        self.FCFS_queue = []
         lanes = traci.trafficlight.getControlledLanes(ID)
         for l in lanes:
             self.connected_lanes.append(Lane(l))
@@ -113,19 +114,22 @@ class simulation:
 
 
         step = 0
+        record_step = 5
         while step < endstep:
             all_vehicles = traci.vehicle.getIDList()
             speed_step = []
             time_step = []
-            for ID in all_vehicles:
-                speed_step.append(traci.vehicle.getSpeed(ID))
-                time_step.append(traci.vehicle.getAccumulatedWaitingTime(ID))
-            if len(speed_step) > 0:
-                mean_speeds.append(sum(speed_step)/len(speed_step))
-            if len(time_step) > 0:
-                mean_times.append(sum(time_step)/len(time_step))
-            self.eval_tls_queuesize(step,check_interval=10)
+            if step % record_step == 0:
+                for ID in all_vehicles:
+                    speed_step.append(traci.vehicle.getSpeed(ID))
+                    time_step.append(traci.vehicle.getAccumulatedWaitingTime(ID))
+                if len(speed_step) > 0:
+                    mean_speeds.append(sum(speed_step)/len(speed_step))
+                if len(time_step) > 0:
+                    mean_times.append(sum(time_step)/len(time_step))
+            # self.eval_tls_queuesize(step,check_interval=10)
             # self.eval_tls_global(step,check_interval=10)
+            self.eval_tls_fcfs(step,check_interval=10)
             traci.simulationStep()
             step += timestep
 
@@ -192,11 +196,42 @@ class simulation:
                 current_state = traci.trafficlight.getRedYellowGreenState(junc.ID)
                 if current_state != newState:
                     traci.trafficlight.setRedYellowGreenState(junc.ID, current_state.replace("G", "y"))
-        # If the yellow light has been on for 3 second we switch to the new state
+        # If the yellow light has been on for 3 seconds we switch to the new state
         elif (step-3) % check_interval == 0:
             for junc in self.junctions:
                 if junc.next_state:
                     traci.trafficlight.setRedYellowGreenState(junc.ID, junc.next_state)
+
+
+    # Evaluates all traffic lights in the system and sets the new corresponding state
+    # Uses the first-come-first-serve strategy
+    def eval_tls_fcfs(self,step: int, check_interval: int):
+        # If the step is a multiple of the check interval, do the calculations
+        if step % check_interval == 0:
+            for junc in self.junctions:
+                if not junc.FCFS_queue:
+                    continue
+                newState = junc.FCFS_queue.pop(0) # Get new state from queue
+                junc.next_state = newState
+
+                # Getting the current state and making all red lights yellow
+                current_state = traci.trafficlight.getRedYellowGreenState(junc.ID)
+                if current_state != newState:
+                    traci.trafficlight.setRedYellowGreenState(junc.ID, current_state.replace("G", "y"))
+        # If the yellow light has been on for 3 seconds we switch to the new state
+        elif (step-3) % check_interval == 0:
+            for junc in self.junctions:
+                if junc.next_state:
+                    traci.trafficlight.setRedYellowGreenState(junc.ID, junc.next_state)
+        if step % 5 == 0:
+            # Check if junc has all combinations in queue
+            for junc in self.junctions:
+                queue_length = len(junc.FCFS_queue)
+                if len(junc.FCFS_queue) < len(junc.tl_combinations):
+                    self.laneCheckFCFS(junc)
+                # else:
+                #     print('queue full')
+
 
     # Returns number of vehicles on the given lane, within X distance of the junction
     def getNumVehicles(self, lane: str):
@@ -215,6 +250,22 @@ class simulation:
                 highScore = combination.score
                 new_ryg_state = combination.ryg_state
         return new_ryg_state
+
+    # Checks per TL combination whether vehicles are waiting on corresponding lanes
+    def laneCheckFCFS(self, junc):
+        for tl_combination in junc.tl_combinations:
+            if tl_combination in junc.FCFS_queue: # Skip if already in queue
+                continue
+            for lane in tl_combination.corresponding_lanes:
+                if tl_combination in junc.FCFS_queue: break
+                for vehicle in traci.lane.getLastStepVehicleIDs(lane.ID):
+                    # position = traci.vehicle.getLanePosition(vehicle)
+                    # speed = traci.vehicle.getSpeed(vehicle)
+                    # if (traci.vehicle.getLanePosition(vehicle) > 0) & (traci.vehicle.getSpeed(vehicle) == 0):
+                    if (traci.vehicle.getSpeed(vehicle) == 0):
+                        junc.FCFS_queue.append(tl_combination)
+                        break
+
 
 
 
