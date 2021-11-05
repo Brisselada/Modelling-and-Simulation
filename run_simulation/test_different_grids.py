@@ -13,18 +13,18 @@ if __name__ == '__main__':
         # Amount of lanes is 2*(i*(i+1))
         lanes =2*i*(i+1)
 
-        # At 60 roads we want 500 flows, so we normalise to 60 roads
+        # At 60 roads we want 100 flows, so we normalise to 60 roads
         norm = lanes/60
-        flows = int(250*norm)
+        flows = int(100*norm)
 
         makegrid(number = i,length = 200 , traffic_light = True, flows = flows)
         print(f"Made grid for size {i}")
 
-        timestep = 10
+        timestep = 1
         endstep = 10000
 
         # Starting the simulation
-        s = simulation(grid_path = "grid.sumocfg")
+        s = simulation(n=i, grid_path = "grid.sumocfg")
         mean_speeds, mean_times = s.start_sim(timestep,endstep)
 
         all_mean_speeds.append(mean_speeds)
@@ -45,7 +45,7 @@ if __name__ == '__main__':
     fig.suptitle("Mean speeds for different grid sizes, flow = 250")
     frame = fig.add_subplot(1,1,1)
     for i,speed in enumerate(all_mean_speeds):
-        frame.plot(np.arange(1,len(speed)*timestep,timestep),speed,label=f"Grid size {i+3}")
+        frame.plot(np.arange(1,len(speed)*timestep+1,timestep),speed,label=f"Grid size {i+3}")
     frame.set_xlabel("Simulation step")
     frame.set_ylabel("Mean speed (km/h)")
     frame.legend()
@@ -56,7 +56,7 @@ if __name__ == '__main__':
     fig.suptitle("Mean cumulative waiting time for different grid sizes, flow = 250")
     frame = fig.add_subplot(1,1,1)
     for i,time in enumerate(all_mean_times):
-        frame.plot(np.arange(1,len(time)*timestep,timestep),time,label=f"Grid size {i+3}")
+        frame.plot(np.arange(1,len(time)*timestep+1,timestep),time,label=f"Grid size {i+3}")
     frame.set_xlabel("Simulation step")
     frame.set_ylabel("Mean cumulative waiting time (s)")
     frame.legend()
