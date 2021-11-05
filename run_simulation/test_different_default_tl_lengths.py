@@ -13,7 +13,7 @@ if __name__ == '__main__':
     timestep = 10
     endstep = 10000
     for i in [10,20,30,40,50]:
-        makegrid(number = 4,length = 200 , traffic_light = True, flows = 200,total_cycle_time=i*2+6)
+        makegrid(number = 5,length = 200 , traffic_light = True, flows = 200,total_cycle_time=i*2+6)
 
         s = simulation(grid_path = "grid.sumocfg")
         mean_speeds, mean_times = s.start_sim(timestep,endstep)
