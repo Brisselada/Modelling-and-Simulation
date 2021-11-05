@@ -27,7 +27,7 @@ def makegrid(number: int = 3, length: int = 200, traffic_light: bool = True, flo
     if traffic_light:
         os.system(f"netgenerate -g --grid.number={number} --grid.length={length} --default-junction-type "
                   f"traffic_light --tls.cycle.time {total_cycle_time} -L 1 --no-turnarounds true --turn-lanes 2 "
-                  f"--no-internal-links --turn-lanes.length 99 --output-file=grid.net.xml")
+                  f"--turn-lanes.length 99 --output-file=grid.net.xml")
         if custom_tl:
             make_custom_tl(number)
     else:

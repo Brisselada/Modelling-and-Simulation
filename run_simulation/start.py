@@ -3,7 +3,7 @@ import numpy as np
 from simulation import simulation
 
 if __name__ == '__main__':
-    timestep = 10
+    timestep = 1
     endstep = 10000
 
     s = simulation(5)
