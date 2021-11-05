@@ -129,10 +129,10 @@ class simulation:
                     mean_times.append(sum(time_step)/len(time_step))
             if simulation == "queue_size":
                 self.eval_tls_queuesize(step,check_interval=10)
-            if simulation == "global":
+            elif simulation == "global":
                 self.eval_tls_global(step, check_interval=10)
-            if simulation == "fcfs":
-                self.eval_tls_fcfs(step, check_interval=10
+            elif simulation == "fcfs":
+                self.eval_tls_fcfs(step, check_interval=10)
             traci.simulationStep()
             step += timestep
 
@@ -240,7 +240,7 @@ class simulation:
     def getNumVehicles(self, lane: str):
         total = 0
         for vehicle in traci.lane.getLastStepVehicleIDs(lane):
-            if traci.vehicle.getLanePosition(vehicle) < 90: # Moet wss specifieker
+            if traci.vehicle.getLanePosition(vehicle) > (traci.lane.getLength(lane) - 100):
                 total += 1
         return total
 
