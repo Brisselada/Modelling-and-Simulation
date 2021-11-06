@@ -41,7 +41,7 @@ class Combination:
 
 class simulation:
     def __init__(self, n: int, grid_path: str = "../generate_network/grid.sumocfg") -> None:
-        self.sumoCmd = ["sumo", "-c", grid_path]
+        self.sumoCmd = ["sumo-gui", "-c", grid_path]
         self.gridsize = n
 
 
@@ -156,8 +156,9 @@ class simulation:
 
                 # Getting the current state and making all red lights yellow
                 current_state = traci.trafficlight.getRedYellowGreenState(junc.ID)
-                if current_state != newState:
-                    traci.trafficlight.setRedYellowGreenState(junc.ID, current_state.replace("G", "y"))
+                if newState:
+                    if current_state != newState:
+                        traci.trafficlight.setRedYellowGreenState(junc.ID, current_state.replace("G", "y"))
         elif (step-3) % check_interval == 0:
             for junc in self.junctions:
                 if junc.next_state:
@@ -197,8 +198,9 @@ class simulation:
 
                 # Getting the current state and making all red lights yellow
                 current_state = traci.trafficlight.getRedYellowGreenState(junc.ID)
-                if current_state != newState:
-                    traci.trafficlight.setRedYellowGreenState(junc.ID, current_state.replace("G", "y"))
+                if newState:
+                    if current_state != newState:
+                        traci.trafficlight.setRedYellowGreenState(junc.ID, current_state.replace("G", "y"))
         # If the yellow light has been on for 3 seconds we switch to the new state
         elif (step-3) % check_interval == 0:
             for junc in self.junctions:
@@ -219,8 +221,9 @@ class simulation:
 
                 # Getting the current state and making all red lights yellow
                 current_state = traci.trafficlight.getRedYellowGreenState(junc.ID)
-                if current_state != newState:
-                    traci.trafficlight.setRedYellowGreenState(junc.ID, current_state.replace("G", "y"))
+                if newState:
+                    if current_state != newState:
+                        traci.trafficlight.setRedYellowGreenState(junc.ID, current_state.replace("G", "y"))
         # If the yellow light has been on for 3 seconds we switch to the new state
         elif (step-3) % check_interval == 0:
             for junc in self.junctions:
