@@ -15,8 +15,7 @@ class Junction:
         self.recently_change = False
         self.countdown_next_change = 0
         self.next_state = None
-        self.FCFS_queue = []
-        self.FCFS_current_vehicles = {}
+        self.FCFS_queue = {}
         lanes = traci.trafficlight.getControlledLanes(ID)
         for l in lanes:
             self.connected_lanes.append(Lane(l))
@@ -223,13 +222,19 @@ class simulation:
                 self.updateFCFS_queue(junc)
                 if not junc.FCFS_queue:
                     continue
-                newState = junc.FCFS_queue[0]
+                key = list(junc.FCFS_queue.keys())[0]
+                newState = junc.FCFS_queue[key]
                 junc.next_state = newState
 
-                junc.FCFS_queue.pop(0)
-
-                key = list(junc.FCFS_current_vehicles.keys())[0]
-                junc.FCFS_current_vehicles.pop(key)
+                # See if vehicle has left yet, if so we can move on to the next value in the queue
+                pop = True
+                for tl_combination in junc.tl_combinations:
+                    for lane in tl_combination.corresponding_lanes:
+                        for vehicle in traci.lane.getLastStepVehicleIDs(lane.ID):
+                            if key==vehicle:
+                                pop = False
+                if pop:
+                    junc.FCFS_queue.pop(key)
 
                 # Getting the current state and making all red lights yellow
                 current_state = traci.trafficlight.getRedYellowGreenState(junc.ID)
@@ -266,9 +271,4 @@ class simulation:
         for tl_combination in junc.tl_combinations:
             for lane in tl_combination.corresponding_lanes:
                 for vehicle in traci.lane.getLastStepVehicleIDs(lane.ID):
-                    # Seeing if the vehicle is already in the queue
-                    try:
-                        junc.FCFS_current_vehicles[vehicle]
-                    except:
-                        junc.FCFS_current_vehicles[vehicle] = 1
-                        junc.FCFS_queue.append(tl_combination)
+                    junc.FCFS_queue[vehicle] = tl_combination.ryg_state
