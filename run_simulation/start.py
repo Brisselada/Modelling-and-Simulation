@@ -6,7 +6,7 @@ if __name__ == '__main__':
     timestep = 1
     endstep = 5000
 
-    s = simulation(n=5)
+    s = simulation(n=5, gui = True)
     mean_speeds, mean_times = s.start_sim(timestep = timestep,endstep =endstep, strategy = "fcfc")
 
     fig=figure()

@@ -40,8 +40,11 @@ class Combination:
 
 
 class simulation:
-    def __init__(self, n: int, grid_path: str = "../generate_network/grid.sumocfg") -> None:
-        self.sumoCmd = ["sumo-gui", "-c", grid_path]
+    def __init__(self, n: int, grid_path: str = "../generate_network/grid.sumocfg", gui = False) -> None:
+        if gui:
+            self.sumoCmd = ["sumo-gui", "-c", grid_path]
+        else:
+            self.sumoCmd = ["sumo", "-c", grid_path]
         self.gridsize = n
 
 
@@ -132,7 +135,7 @@ class simulation:
             elif strategy == "global":
                 self.eval_tls_global(step, check_interval=tl_time)
             elif strategy == "fcfs":
-                self.eval_tls_fcfs(step, check_interval=tl_time)
+                self.eval_tls_fcfs(step, check_interval=4)
             traci.simulationStep()
             step += timestep
 
@@ -211,13 +214,18 @@ class simulation:
     # Evaluates all traffic lights in the system and sets the new corresponding state
     # Uses the first-come-first-serve strategy
     def eval_tls_fcfs(self,step: int, check_interval: int):
+        # We append to the queue
+        for junc in self.junctions:
+            self.laneCheckFCFS(junc)
+
+
         # If the step is a multiple of the check interval, do the calculations
         if step % check_interval == 0:
             for junc in self.junctions:
                 if not junc.FCFS_queue:
                     continue
-                newState = junc.FCFS_queue.pop(0) # Get new state from queue
-                junc.next_state = newState
+                newState = junc.FCFS_queue[0]
+                junc.next_state = newState[0]
 
                 # Getting the current state and making all red lights yellow
                 current_state = traci.trafficlight.getRedYellowGreenState(junc.ID)
@@ -229,14 +237,6 @@ class simulation:
             for junc in self.junctions:
                 if junc.next_state:
                     traci.trafficlight.setRedYellowGreenState(junc.ID, junc.next_state)
-        if step % 5 == 0:
-            # Check if junc has all combinations in queue
-            for junc in self.junctions:
-                queue_length = len(junc.FCFS_queue)
-                if len(junc.FCFS_queue) < len(junc.tl_combinations):
-                    self.laneCheckFCFS(junc)
-                # else:
-                #     print('queue full')
 
 
     # Returns number of vehicles on the given lane, within X distance of the junction
@@ -259,18 +259,29 @@ class simulation:
 
     # Checks per TL combination whether vehicles are waiting on corresponding lanes
     def laneCheckFCFS(self, junc):
+        if len(junc.FCFS_queue)>0:
+            for i, FCFS_queue in enumerate(junc.FCFS_queue):
+                tl_combination = FCFS_queue[0]
+                vehicles = FCFS_queue[1]
+                current_vehicles = 0
+
+                # Check if vehicle is still on lane or if it has departed already
+                for lane in tl_combination.corresponding_lanes:
+                    for vehicle in traci.lane.getLastStepVehicleIDs(lane.ID):
+                        if vehicle in vehicles:
+                            current_vehicles += 1
+                if current_vehicles == 0:
+                    junc.FCFS_queue.pop(i)
+
         for tl_combination in junc.tl_combinations:
-            if tl_combination in junc.FCFS_queue: # Skip if already in queue
-                continue
             for lane in tl_combination.corresponding_lanes:
-                if tl_combination in junc.FCFS_queue: break
+                vehicles = []
                 for vehicle in traci.lane.getLastStepVehicleIDs(lane.ID):
                     # position = traci.vehicle.getLanePosition(vehicle)
                     # speed = traci.vehicle.getSpeed(vehicle)
                     # if (traci.vehicle.getLanePosition(vehicle) > 0) & (traci.vehicle.getSpeed(vehicle) == 0):
-                    if (traci.vehicle.getSpeed(vehicle) == 0):
-                        junc.FCFS_queue.append(tl_combination)
-                        break
+                    vehicles.append(vehicle)
+                junc.FCFS_queue.append((tl_combination, vehicles))
 
 
 
