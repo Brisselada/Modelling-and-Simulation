@@ -10,8 +10,7 @@ def makegrid(number: int = 3, length: int = 200, traffic_light: bool = True, flo
     """
     Function to make the .sumocfg for a grid_path
 
-    :param additional:
-    :param total_cycle_time:
+    :param total_cycle_time: How long the total cycle time should be when using the default time
     :param custom_tl: Whether the default tl should be overwritten with a format that doesn't make cars cross
     :param number: the grid will be made according to size numberxnumber
     :param length: The length of the roads in metres
