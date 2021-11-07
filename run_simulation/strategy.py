@@ -17,7 +17,6 @@ def eval_tls_queuesize(self, step: int, check_interval: int):
     ::param step : current step of the simulation
     ::param check_interval : at which steps to perform the algorithm and change lights if necessary
     """
-
     # If the step is a multiple of the check interval, do the calculations
     if step % check_interval == 0:
         for junc in self.junctions:
