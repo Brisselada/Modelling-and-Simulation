@@ -25,7 +25,6 @@ if __name__ == '__main__':
     timestep = 1
     endstep = 1000
     record_step = 1 # Step at which the values are recorded
-    # strategies = [None, "queue_size", "global"]
     strategies = [None, "queue_size", "global", "fcfs"]
     for strategy in strategies:
 

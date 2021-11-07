@@ -7,7 +7,7 @@ if __name__ == '__main__':
     endstep = 10000
 
     s = simulation(n=5, gui = False)
-    mean_speeds, mean_times = s.start_sim(tl_time=20,timestep = timestep,endstep =2000,strategy = "queue_size")
+    mean_speeds, mean_times = s.start_sim(tl_time=4,timestep = timestep,endstep =2000,strat = "fcfc")
 
     fig=figure()
     frame = fig.add_subplot(1,2,1)

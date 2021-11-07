@@ -16,7 +16,7 @@ class run_simulation(object):
         self.gridsize = gridsize
         self.strategy = strategy
     def __call__(self,i):
-        mean_speeds, mean_times = self.s.start_sim(tl_time = self.time, timestep = self.timestep, endstep = self.endstep, strategy = self.strategy)
+        mean_speeds, mean_times = self.s.start_sim(tl_time = self.time, timestep = self.timestep, endstep = self.endstep, strat = self.strategy)
         return mean_speeds, mean_times
 
 if __name__ == '__main__':
@@ -24,7 +24,7 @@ if __name__ == '__main__':
     for flow in [150,300,450]:
         for i in [3,4,5]:
             # Amount of lanes
-            lanes = 48 + 23 * (i - 3) + 16 * (i - 2) * (i - 1)
+            lanes = 48 + 32 * (i - 3) + 16 * (i - 2) * (i - 1)
 
             # At 60 roads we want 100 flows, so we normalise to 60 roads
             norm = lanes / 304
