@@ -20,7 +20,7 @@ class run_simulation(object):
         self.gridsize = gridsize
         self.strategy = strategy
     def __call__(self,i):
-        mean_speeds, mean_times = self.s.start_sim(tl_time = self.time, timestep = self.timestep, endstep = self.endstep, strategy = self.strategy)
+        mean_speeds, mean_times = self.s.start_sim(tl_time = self.time, timestep = self.timestep, endstep = self.endstep, strat = self.strategy)
         return mean_speeds, mean_times
 
 
@@ -34,16 +34,11 @@ if __name__ == '__main__':
         for time in possible_times:
             mean_speeds_per_step = []
             mean_times_per_step = []
-            #for i in possible_times:
-            #    s = simulation(gridsize)
-            #    mean_speeds, mean_times = s.start_sim(timestep, endstep, "queue_size", i)
-            #    all_mean_speeds.append(mean_speeds)
-            #    all_mean_times.append(mean_times)
 
             pool = Pool()  # Create a multiprocessing Pool
 
             # To ensure statistical soundness, we run each simulation 8 times
-            result = pool.map(run_simulation(time = time, timestep = 1, endstep = 5000, gridsize = 5, strategy = strategy), range(8))
+            result = pool.map(run_simulation(time = time, timestep = 1, endstep = 5000, gridsize = 5, strat = strategy), range(8))
             for i in result:
                 mean_speeds_per_step.append(i[0])
                 mean_times_per_step.append(i[1])
