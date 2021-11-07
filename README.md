@@ -10,16 +10,15 @@ To run this project, the following Python packages are required:
 - string
 - multiprocessing
 
-It should be run on at least python 3.8.
-
-Furthermore a recent version of SUMO is necessary.
+The project should be run on at least Python 3.8. 
+Furthermore, a recent version of SUMO is required, which can be downloaded from https://www.eclipse.org/sumo/.
 
 ## Running the code
 
 This project contains various Python files which can be run: 
 
 - generate_network.py is used to create grids with the given size and traffic congestion level.
-- start.py can be used for quickly running a single simulation, assuming a grid has already been generated.
+- start.py can be used for quickly running a single simulation, assuming a grid has already been generated. Outputs plots for the mean speed and mean cumulative delay.
 - final.py runs simulations for all strategies, for various grid sizes and traffic congestion levels. The latter values can easily be changed in the file itself.
 
 Two files which contain auxiliary classes and functions: 
