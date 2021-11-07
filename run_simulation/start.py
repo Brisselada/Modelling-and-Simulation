@@ -5,7 +5,7 @@ from simulation import simulation
 # Mainly used for quickly running a single simulation
 if __name__ == '__main__':
     timestep = 1
-    endstep = 5000
+    endstep = endstep
 
     s = simulation(n=5, gui = False)
     mean_speeds, mean_times = s.start_sim(tl_time=4, timestep=timestep, endstep=2000, strat="fcfs")
