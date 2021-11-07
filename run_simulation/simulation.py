@@ -135,7 +135,7 @@ class simulation:
             elif strategy == "global":
                 self.eval_tls_global(step, check_interval=tl_time)
             elif strategy == "fcfs":
-                self.eval_tls_fcfs(step, check_interval=4)
+                self.eval_tls_fcfs(step, check_interval=tl_time)
             traci.simulationStep()
             step += timestep
 

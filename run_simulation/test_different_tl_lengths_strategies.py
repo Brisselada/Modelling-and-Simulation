@@ -26,12 +26,10 @@ class run_simulation(object):
 
 if __name__ == '__main__':
 
-
     for strategy in ["queue_size", "global", "fcfs"]:
-        # To ensure statistical soundness, we run each simulation 10 times
         all_mean_speeds = []
         all_mean_times = []
-        possible_times = np.arange(14, 32, 2)
+        possible_times = [4,10,15,20,25,30]
         # possible_times = [10,20]
         for time in possible_times:
             mean_speeds_per_step = []
@@ -44,7 +42,8 @@ if __name__ == '__main__':
 
             pool = Pool()  # Create a multiprocessing Pool
 
-            result = pool.map(run_simulation(time = time, timestep = 1, endstep = 10000, gridsize = 5, strategy = strategy), range(8))
+            # To ensure statistical soundness, we run each simulation 8 times
+            result = pool.map(run_simulation(time = time, timestep = 1, endstep = 5000, gridsize = 5, strategy = strategy), range(8))
             for i in result:
                 mean_speeds_per_step.append(i[0])
                 mean_times_per_step.append(i[1])

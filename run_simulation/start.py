@@ -4,10 +4,10 @@ from simulation import simulation
 
 if __name__ == '__main__':
     timestep = 1
-    endstep = 5000
+    endstep = 10000
 
     s = simulation(n=5, gui = False)
-    mean_speeds, mean_times = s.start_sim(timestep = timestep,endstep =endstep, strategy = "fcfs")
+    mean_speeds, mean_times = s.start_sim(tl_time=20,timestep = timestep,endstep =2000,strategy = "queue_size")
 
     fig=figure()
     frame = fig.add_subplot(1,2,1)

@@ -5,6 +5,7 @@ from simulation import simulation
 sys.path.append("..")
 from generate_network.generate_network import makegrid
 
+
 if __name__ == '__main__':
     all_mean_speeds = []
     all_mean_times = []
@@ -23,9 +24,9 @@ if __name__ == '__main__':
 
     timestep = 1
     endstep = 1000
-    record_step = 5 # Step at which the values are recorded
-    strategies = [None, "queue_size", "global"]
-    # strategies = [None, "queue_size", "global", "fcfs"]
+    record_step = 1 # Step at which the values are recorded
+    # strategies = [None, "queue_size", "global"]
+    strategies = [None, "queue_size", "global", "fcfs"]
     for strategy in strategies:
 
         # Starting the simulation

@@ -118,4 +118,4 @@ def make_custom_tl(number: int) -> None:
 
 
 if __name__ == '__main__':
-    makegrid(number = 5, flows = 50)
+    makegrid(number = 5, flows = 100)
