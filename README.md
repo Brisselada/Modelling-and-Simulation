@@ -15,4 +15,4 @@ Furthermore a recent version of SUMO is necessary.
 
 ## Running the code
 
-This projects contains various python files, the most important one is final.py, which runs all strategies for grid sizes 3,4,5 and flows 150, 300, 450. These numbers can easily be changed in the file itself. Furthermore start.py contains the simulation class with it's required methods to set it up and also the junction, combination and lane objects which define the grid and its connections. The strategies are in strategy.py.
+This projects contains various python files, the most important one is final.py, which runs all strategies for grid sizes 3,4,5 and flows 150, 300, 450. These numbers can easily be changed in the file itself. Furthermore start.py contains the simulation class with it's required methods to set it up and also the junction, combination and lane objects which define the grid and its connections. The strategies are in strategy.py. generate_network.py is used to create grids with the correct flows to do analysis on.
