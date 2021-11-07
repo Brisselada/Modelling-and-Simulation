@@ -1,10 +1,4 @@
-import os, sys
-from collections import defaultdict
 import traci
-import traci.constants as tc
-from collections.abc import Callable
-import numpy as np
-import string
 
 
 # Evaluates all traffic lights in the system (alleen op 4-way intersections?) and sets the new corresponding state
@@ -17,7 +11,7 @@ def eval_tls_queuesize(self, step: int, check_interval: int):
     ::param step : current step of the simulation
     ::param check_interval : at which steps to perform the algorithm and change lights if necessary
     """
-    # If the step is a multiple of the check interval, do the calculations
+    # If the step is a multiple of the check interval, do the evaluation
     if step % check_interval == 0:
         for junc in self.junctions:
             for tl_combination in junc.tl_combinations:
@@ -32,6 +26,8 @@ def eval_tls_queuesize(self, step: int, check_interval: int):
             if newState:
                 if current_state != newState:
                     traci.trafficlight.setRedYellowGreenState(junc.ID, current_state.replace("G", "y"))
+
+    # If the yellow light has been on for 3 steps we switch to the new green state
     elif (step - 3) % check_interval == 0:
         for junc in self.junctions:
             if junc.next_state:
@@ -40,11 +36,11 @@ def eval_tls_queuesize(self, step: int, check_interval: int):
 
 # Evaluates all traffic lights in the system (alleen op 4-way intersections?) and sets the new corresponding state
 # Uses the smart/global strategy
-# Overwegend hetzelfde als queue size based strategy, maar dan met extra phase en de extra connectedScore
+# Similar to queue size based strategy, but with extra phase and connected_score
 def eval_tls_global(self, step: int, check_interval: int):
     """"
     Function for the global queue size based strategy. It evaluates how long queues are and then assigns the green light
-    to the queue with the best score. The score is determined by looking at the queues for the traffic light and also
+    to the queue with the best score. The score is determined by looking at the queues for the traffic light and
     all the queues leading up to that lane
 
     ::param step : current step of the simulation
@@ -75,7 +71,8 @@ def eval_tls_global(self, step: int, check_interval: int):
             if newState:
                 if current_state != newState:
                     traci.trafficlight.setRedYellowGreenState(junc.ID, current_state.replace("G", "y"))
-    # If the yellow light has been on for 3 seconds we switch to the new state
+
+    # If the yellow light has been on for 3 steps we switch to the new green state
     elif (step - 3) % check_interval == 0:
         for junc in self.junctions:
             if junc.next_state:
@@ -97,6 +94,7 @@ def eval_tls_fcfs(self, step: int, check_interval: int):
         for junc in self.junctions:
             self.updateFCFS_queue(junc)
             if not junc.FCFS_queue:
+                # Move on to the next junction if no vehicles approach the intersection
                 continue
             key = list(junc.FCFS_queue.keys())[0]
             newState = junc.FCFS_queue[key]
@@ -117,6 +115,7 @@ def eval_tls_fcfs(self, step: int, check_interval: int):
             if junc.next_state:
                 if current_state != junc.next_state:
                     traci.trafficlight.setRedYellowGreenState(junc.ID, current_state.replace("G", "y"))
+
     # If the yellow light has been on for 3 seconds we switch to the new state
     elif (step - 3) % check_interval == 0:
         for junc in self.junctions:

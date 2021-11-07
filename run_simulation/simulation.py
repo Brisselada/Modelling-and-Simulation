@@ -1,8 +1,5 @@
-import os, sys
 from collections import defaultdict
 import traci
-import traci.constants as tc
-from collections.abc import Callable
 import numpy as np
 import string
 import strategy
@@ -170,14 +167,15 @@ class simulation:
         traci.start(self.sumoCmd)
         self.prep_data()
 
-
         step = 0
-        record_step = 1
+        record_step = 1 # Determines at which interval metrics get recorded
         while step < endstep:
             all_vehicles = traci.vehicle.getIDList()
             speed_step = []
             time_step = []
+
             if step % record_step == 0:
+                # Record metrics at current step
                 for ID in all_vehicles:
                     speed_step.append(traci.vehicle.getSpeed(ID))
                     time_step.append(traci.vehicle.getAccumulatedWaitingTime(ID))
@@ -185,6 +183,8 @@ class simulation:
                     mean_speeds.append(sum(speed_step)/len(speed_step))
                 if len(time_step) > 0:
                     mean_times.append(sum(time_step)/len(time_step))
+
+            # Evaluate traffic light system based on chosen strategy
             if strat == "queue_size":
                 strategy.eval_tls_queuesize(step,check_interval=tl_time)
             elif strat == "global":

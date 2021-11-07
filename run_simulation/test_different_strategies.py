@@ -10,7 +10,6 @@ if __name__ == '__main__':
     all_mean_speeds = []
     all_mean_times = []
 
-    # TODO: better calculation of flows
     # Amount of lanes is 2*(size*(size+1))
     size = 5
     lanes = 2 * size * (size + 1)
@@ -30,7 +29,7 @@ if __name__ == '__main__':
 
         # Starting the simulation
         s = simulation(n=5, gui=False)
-        mean_speeds, mean_times = s.start_sim(timestep=timestep, endstep=endstep, strategy=strategy)
+        mean_speeds, mean_times = s.start_sim(timestep=timestep, endstep=endstep, strat=strategy)
 
         all_mean_speeds.append(mean_speeds)
         all_mean_times.append(mean_times)
@@ -43,8 +42,7 @@ if __name__ == '__main__':
     os.remove("rerouter.add.xml")
     # os.remove("grid.output.xml")
 
-    strategy_names = ["Basic", "Queue-size based", "Global"]
-    # strategy_names = ["Basic", "Queue-size based", "Global", "FCFS"]
+    strategy_names = ["Basic", "Queue-size based", "Global", "FCFS"]
 
     # Plotting
     fig=figure()

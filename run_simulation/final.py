@@ -1,4 +1,4 @@
-from matplotlib.pyplot import figure, show
+from matplotlib.pyplot import figure
 import numpy as np
 import os,sys
 from simulation import simulation
@@ -20,13 +20,13 @@ class run_simulation(object):
         return mean_speeds, mean_times
 
 if __name__ == '__main__':
-    # Doesn't work for less than 3
+    # Doesn't work for a size lower than 3
     for flow in [150,300,450]:
         for i in [3,4,5]:
             # Amount of lanes
             lanes = 48 + 32 * (i - 3) + 16 * (i - 2) * (i - 1)
 
-            # At 60 roads we want 100 flows, so we normalise to 60 roads
+            # Normalize flows to the number of lanes
             norm = lanes / 304
             flows = int(flow * norm)
 
